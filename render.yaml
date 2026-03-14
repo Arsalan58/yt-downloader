@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: snapload
+    runtime: node
+    buildCommand: bash build.sh
+    startCommand: node server.js
+    envVars:
+      - key: RENDER
+        value: "true"
+      - key: NODE_ENV
+        value: production
+    # Free tier — upgrade to paid for longer build timeout & more RAM
+    plan: free

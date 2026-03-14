@@ -1,24 +1,20 @@
 {
-  "name": "yt-downloader",
+  "name": "snapload",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "@distube/ytdl-core": "^4.16.12",
-    "dotenv": "^17.3.1",
-    "fluent-ffmpeg": "^2.1.3",
-    "serverless-http": "^4.0.0"
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
   },
-  "devDependencies": {
-    "express": "^5.2.1",
-    "nodemon": "^3.1.14"
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
