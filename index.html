@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SnapLoad — Download Videos Instantly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --coral: #FF6B6B;
+      --mint: #4ECDC4;
+      --yellow: #FFE66D;
+      --purple: #A78BFA;
+      --pink: #F472B6;
+      --sky: #38BDF8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #FAFBFF;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, .brand {
+      font-family: 'Syne', sans-serif;
+    }
+
+    /* Animated gradient mesh background */
+    .bg-mesh {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 10% 10%, #FFE66D33 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 90% 20%, #FF6B6B22 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 90%, #4ECDC433 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 80% 80%, #A78BFA22 0%, transparent 60%),
+        #FAFBFF;
+      animation: meshMove 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes meshMove {
+      0%   { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(20deg); }
+    }
+
+    /* Floating blobs */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.18;
+      animation: floatBlob 8s ease-in-out infinite alternate;
+    }
+    .blob-1 { width: 380px; height: 380px; background: var(--coral); top: -80px; left: -100px; }
+    .blob-2 { width: 300px; height: 300px; background: var(--mint); top: 60px; right: -80px; animation-delay: 2s; }
+    .blob-3 { width: 250px; height: 250px; background: var(--yellow); bottom: 100px; left: 20%; animation-delay: 4s; }
+
+    @keyframes floatBlob {
+      0%   { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, -30px) scale(1.08); }
+    }
+
+    /* Card glassmorphism */
+    .glass-card {
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(255,255,255,0.9);
+      box-shadow: 0 8px 40px rgba(100,100,150,0.10), 0 2px 8px rgba(100,100,150,0.06);
+    }
+
+    /* Input glow */
+    .url-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.35), 0 4px 20px rgba(78,205,196,0.15);
+    }
+
+    /* Tab active */
+    .tab-btn.active {
+      background: white;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    }
+
+    /* Animated button */
+    .btn-download {
+      background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 50%, #FFD93D 100%);
+      background-size: 200% 200%;
+      animation: gradShift 3s ease infinite;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-download:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 28px rgba(255,107,107,0.40);
+    }
+    .btn-download:active {
+      transform: scale(0.98);
+    }
+
+    @keyframes gradShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Platform pill */
+    .platform-pill {
+      transition: all 0.2s;
+    }
+    .platform-pill:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    }
+
+    /* Format card */
+    .format-card {
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .format-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.10);
+    }
+    .format-card.selected {
+      border-color: var(--mint) !important;
+      background: rgba(78,205,196,0.08);
+    }
+
+    /* Progress bar animation */
+    .progress-bar-fill {
+      animation: progressFill 1.8s ease-out forwards;
+    }
+    @keyframes progressFill {
+      from { width: 0%; }
+      to   { width: 78%; }
+    }
+
+    /* Pulse dot */
+    .pulse-dot {
+      animation: pulseDot 1.4s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* Stagger fade-in */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease forwards;
+    }
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+
+    /* Toast */
+    #toast {
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Steps connector line */
+    .step-line::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, #4ECDC4, #A78BFA);
+      opacity: 0.3;
+    }
+
+    /* Shimmer */
+    .shimmer {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d0d0e0; border-radius: 3px; }
+  </style>
+</head>
+<body class="relative">
+
+  <!-- Background -->
+  <div class="bg-mesh"></div>
+  <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="fixed top-6 right-6 z-50 translate-x-[200%] opacity-0">
+    <div class="glass-card rounded-2xl px-5 py-3.5 flex items-center gap-3 min-w-[260px]">
+      <div id="toast-icon" class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"></div>
+      <p id="toast-msg" class="text-sm font-medium text-gray-700"></p>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="relative z-10 px-6 py-5 flex items-center justify-between max-w-6xl mx-auto">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white text-lg font-black" style="background: linear-gradient(135deg, #FF6B6B, #FFD93D)">⚡</div>
+      <span class="brand text-xl font-800 text-gray-800 tracking-tight" style="font-weight:800;">SnapLoad</span>
+    </div>
+    <div class="hidden sm:flex items-center gap-6 text-sm font-medium text-gray-500">
+      <a href="#how" class="hover:text-gray-800 transition-colors">How it works</a>
+      <a href="#features" class="hover:text-gray-800 transition-colors">Features</a>
+      <a href="#faq" class="hover:text-gray-800 transition-colors">FAQ</a>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="pulse-dot w-2 h-2 rounded-full bg-emerald-400"></div>
+      <span class="text-xs text-gray-400 font-medium">Service Online</span>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <main class="relative z-10 max-w-6xl mx-auto px-6 pt-10 pb-24">
+
+    <!-- Hero Text -->
+    <div class="text-center mb-12">
+      <div class="fade-in inline-flex items-center gap-2 bg-white/70 backdrop-blur border border-white rounded-full px-4 py-1.5 text-xs font-medium text-gray-500 mb-6 shadow-sm">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+        Free · Fast · No Sign-up Required
+      </div>
+      <h1 class="fade-in delay-1 text-5xl sm:text-6xl md:text-7xl font-black text-gray-900 leading-none tracking-tight mb-5">
+        Download Any<br/>
+        <span style="background: linear-gradient(135deg, #FF6B6B, #FF8E53, #FFD93D); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Video. Instantly.</span>
+      </h1>
+      <p class="fade-in delay-2 text-lg text-gray-500 max-w-xl mx-auto font-light leading-relaxed">
+        Paste a link from YouTube or Instagram and get your video in seconds — no watermarks, no limits, HD quality.
+      </p>
+    </div>
+
+    <!-- Main Downloader Card -->
+    <div class="fade-in delay-3 glass-card rounded-3xl p-6 sm:p-8 max-w-2xl mx-auto mb-10">
+
+      <!-- Platform Tabs -->
+      <div class="flex bg-gray-100/80 rounded-2xl p-1.5 mb-6 gap-1">
+        <button onclick="setTab('youtube')" id="tab-youtube" class="tab-btn active flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl text-sm font-semibold text-gray-700 transition-all">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+            <rect width="24" height="24" rx="6" fill="#FF0000"/>
+            <polygon points="10,8 17,12 10,16" fill="white"/>
+          </svg>
+          YouTube
+        </button>
+        <button onclick="setTab('instagram')" id="tab-instagram" class="tab-btn flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl text-sm font-semibold text-gray-500 transition-all">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <defs>
+              <linearGradient id="ig" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0%" stop-color="#FD5949"/>
+                <stop offset="50%" stop-color="#D6249F"/>
+                <stop offset="100%" stop-color="#285AEB"/>
+              </linearGradient>
+            </defs>
+            <rect width="24" height="24" rx="7" fill="url(#ig)"/>
+            <circle cx="12" cy="12" r="4" fill="none" stroke="white" stroke-width="1.8"/>
+            <circle cx="17.5" cy="6.5" r="1.2" fill="white"/>
+          </svg>
+          Instagram
+        </button>
+      </div>
+
+      <!-- URL Input -->
+      <div class="relative mb-5">
+        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+          </svg>
+        </div>
+        <input
+          id="url-input"
+          type="text"
+          placeholder="Paste YouTube or Instagram URL here…"
+          class="url-input w-full pl-12 pr-4 py-4 bg-white/80 border-2 border-gray-200 rounded-2xl text-sm text-gray-700 placeholder-gray-300 transition-all font-medium"
+          oninput="handleInput()"
+        />
+        <button onclick="clearInput()" id="clear-btn" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Format Selection -->
+      <div class="mb-6">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Select Format</p>
+        <div class="grid grid-cols-3 gap-2.5">
+          <div class="format-card selected border-2 border-gray-200 rounded-2xl p-3 text-center" onclick="selectFormat(this, 'mp4-hd')">
+            <div class="text-xl mb-1">🎬</div>
+            <div class="text-xs font-bold text-gray-700">MP4 HD</div>
+            <div class="text-xs text-gray-400">1080p</div>
+          </div>
+          <div class="format-card border-2 border-gray-200 rounded-2xl p-3 text-center" onclick="selectFormat(this, 'mp4-sd')">
+            <div class="text-xl mb-1">📹</div>
+            <div class="text-xs font-bold text-gray-700">MP4 SD</div>
+            <div class="text-xs text-gray-400">720p</div>
+          </div>
+          <div class="format-card border-2 border-gray-200 rounded-2xl p-3 text-center" onclick="selectFormat(this, 'mp3')">
+            <div class="text-xl mb-1">🎵</div>
+            <div class="text-xs font-bold text-gray-700">MP3</div>
+            <div class="text-xs text-gray-400">Audio only</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download Button -->
+      <button onclick="handleDownload()" id="download-btn" class="btn-download w-full py-4 rounded-2xl text-white font-bold text-base tracking-wide flex items-center justify-center gap-2.5 shadow-lg">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Download Now
+      </button>
+
+      <!-- Progress Section (hidden by default) -->
+      <div id="progress-section" class="hidden mt-5 p-4 bg-gray-50/80 rounded-2xl border border-gray-100">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2.5">
+            <div id="prog-thumb" class="w-9 h-9 rounded-lg bg-gray-200 shimmer overflow-hidden">
+              <img id="prog-thumb-img" class="w-full h-full object-cover hidden" />
+            </div>
+            <div>
+              <p id="prog-title" class="text-xs font-semibold text-gray-700 max-w-[180px] truncate">Fetching video info…</p>
+              <p id="prog-sub" class="text-xs text-gray-400">Please wait</p>
+            </div>
+          </div>
+          <div id="prog-status" class="text-xs font-bold text-emerald-500"></div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+          <div id="prog-bar" class="h-full rounded-full transition-all duration-300" style="background: linear-gradient(90deg, #4ECDC4, #38BDF8); width: 0%"></div>
+        </div>
+        <p id="prog-percent" class="text-right text-xs text-gray-400 mt-1.5">0%</p>
+      </div>
+
+      <!-- Recent pastes hint -->
+      <div id="paste-hint" class="mt-4 text-center">
+        <p class="text-xs text-gray-300">Supports youtube.com, youtu.be, instagram.com</p>
+      </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="fade-in delay-4 flex flex-wrap items-center justify-center gap-8 mb-20 text-center">
+      <div>
+        <div class="text-2xl font-black text-gray-800" style="font-family:'Syne',sans-serif">24M+</div>
+        <div class="text-xs text-gray-400 font-medium">Videos Downloaded</div>
+      </div>
+      <div class="w-px h-8 bg-gray-200 hidden sm:block"></div>
+      <div>
+        <div class="text-2xl font-black text-gray-800" style="font-family:'Syne',sans-serif">4.9★</div>
+        <div class="text-xs text-gray-400 font-medium">User Rating</div>
+      </div>
+      <div class="w-px h-8 bg-gray-200 hidden sm:block"></div>
+      <div>
+        <div class="text-2xl font-black text-gray-800" style="font-family:'Syne',sans-serif">&lt;5s</div>
+        <div class="text-xs text-gray-400 font-medium">Avg. Process Time</div>
+      </div>
+      <div class="w-px h-8 bg-gray-200 hidden sm:block"></div>
+      <div>
+        <div class="text-2xl font-black text-gray-800" style="font-family:'Syne',sans-serif">100%</div>
+        <div class="text-xs text-gray-400 font-medium">Free Forever</div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div id="how" class="mb-20">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-black text-gray-900 tracking-tight" style="font-family:'Syne',sans-serif">How It Works</h2>
+        <p class="text-gray-400 text-sm mt-2">Three steps. Done in seconds.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+        <div class="glass-card rounded-3xl p-6 text-center relative">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 shadow-md" style="background: linear-gradient(135deg, #FFE66D, #FF8E53)">📋</div>
+          <h3 class="font-bold text-gray-800 mb-1.5" style="font-family:'Syne',sans-serif">1. Paste URL</h3>
+          <p class="text-xs text-gray-400 leading-relaxed">Copy the video link from YouTube or Instagram and paste it in the box above.</p>
+        </div>
+        <div class="glass-card rounded-3xl p-6 text-center">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 shadow-md" style="background: linear-gradient(135deg, #4ECDC4, #38BDF8)">⚙️</div>
+          <h3 class="font-bold text-gray-800 mb-1.5" style="font-family:'Syne',sans-serif">2. Choose Format</h3>
+          <p class="text-xs text-gray-400 leading-relaxed">Select HD video, SD video, or audio-only MP3. All formats are free.</p>
+        </div>
+        <div class="glass-card rounded-3xl p-6 text-center">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 shadow-md" style="background: linear-gradient(135deg, #A78BFA, #F472B6)">⬇️</div>
+          <h3 class="font-bold text-gray-800 mb-1.5" style="font-family:'Syne',sans-serif">3. Download</h3>
+          <p class="text-xs text-gray-400 leading-relaxed">Hit the button and your file saves instantly — no account, no limits.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div id="features" class="mb-20">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-black text-gray-900 tracking-tight" style="font-family:'Syne',sans-serif">Why SnapLoad?</h2>
+        <p class="text-gray-400 text-sm mt-2">Everything you need. Nothing you don't.</p>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-5">
+          <div class="text-2xl mb-3">🚀</div>
+          <h4 class="font-bold text-gray-800 text-sm mb-1" style="font-family:'Syne',sans-serif">Blazing Fast</h4>
+          <p class="text-xs text-gray-400">Server-side processing means downloads start in under 5 seconds.</p>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <div class="text-2xl mb-3">🎯</div>
+          <h4 class="font-bold text-gray-800 text-sm mb-1" style="font-family:'Syne',sans-serif">No Watermarks</h4>
+          <p class="text-xs text-gray-400">Clean, original-quality files. No branding added to your downloads.</p>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <div class="text-2xl mb-3">🔒</div>
+          <h4 class="font-bold text-gray-800 text-sm mb-1" style="font-family:'Syne',sans-serif">Secure & Private</h4>
+          <p class="text-xs text-gray-400">We never store your URLs or downloaded files on our servers.</p>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <div class="text-2xl mb-3">📱</div>
+          <h4 class="font-bold text-gray-800 text-sm mb-1" style="font-family:'Syne',sans-serif">Mobile Friendly</h4>
+          <p class="text-xs text-gray-400">Works perfectly on iPhone, Android, tablet, and desktop browsers.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform Banners -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-20">
+      <!-- YouTube Banner -->
+      <div class="glass-card rounded-3xl p-6 flex items-center gap-5 overflow-hidden relative">
+        <div class="absolute right-0 bottom-0 w-32 h-32 rounded-full opacity-5" style="background:#FF0000; transform:translate(30%, 30%)"></div>
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md" style="background: linear-gradient(135deg, #FF0000, #FF6B6B)">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="white"><polygon points="10,8 17,12 10,16"/></svg>
+        </div>
+        <div>
+          <h3 class="font-black text-gray-800 text-base mb-0.5" style="font-family:'Syne',sans-serif">YouTube Downloader</h3>
+          <p class="text-xs text-gray-400 leading-relaxed">Download regular videos, Shorts, playlists. Supports up to 4K resolution.</p>
+          <div class="flex gap-2 mt-2.5">
+            <span class="text-xs bg-red-50 text-red-400 font-semibold px-2 py-0.5 rounded-full">4K</span>
+            <span class="text-xs bg-red-50 text-red-400 font-semibold px-2 py-0.5 rounded-full">Shorts</span>
+            <span class="text-xs bg-red-50 text-red-400 font-semibold px-2 py-0.5 rounded-full">MP3</span>
+          </div>
+        </div>
+      </div>
+      <!-- Instagram Banner -->
+      <div class="glass-card rounded-3xl p-6 flex items-center gap-5 overflow-hidden relative">
+        <div class="absolute right-0 bottom-0 w-32 h-32 rounded-full opacity-5" style="background:#D6249F; transform:translate(30%, 30%)"></div>
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md" style="background: linear-gradient(135deg, #FD5949, #D6249F, #285AEB)">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="4" fill="none" stroke="white" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.5" fill="white"/></svg>
+        </div>
+        <div>
+          <h3 class="font-black text-gray-800 text-base mb-0.5" style="font-family:'Syne',sans-serif">Instagram Downloader</h3>
+          <p class="text-xs text-gray-400 leading-relaxed">Download Reels, Stories, posts and carousels in full quality.</p>
+          <div class="flex gap-2 mt-2.5">
+            <span class="text-xs bg-purple-50 text-purple-400 font-semibold px-2 py-0.5 rounded-full">Reels</span>
+            <span class="text-xs bg-purple-50 text-purple-400 font-semibold px-2 py-0.5 rounded-full">Stories</span>
+            <span class="text-xs bg-purple-50 text-purple-400 font-semibold px-2 py-0.5 rounded-full">Posts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div id="faq" class="max-w-2xl mx-auto mb-16">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-black text-gray-900 tracking-tight" style="font-family:'Syne',sans-serif">FAQ</h2>
+      </div>
+      <div class="space-y-3" id="faq-list"></div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-gray-200/60 py-8 px-6">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-sm" style="background: linear-gradient(135deg, #FF6B6B, #FFD93D)">⚡</div>
+        <span class="brand font-black text-gray-700">SnapLoad</span>
+      </div>
+      <p class="text-xs text-gray-400 text-center">
+        For personal use only. Respect copyright laws and platform terms of service.
+      </p>
+      <div class="flex gap-5 text-xs text-gray-400">
+        <a href="#" class="hover:text-gray-600 transition-colors">Privacy</a>
+        <a href="#" class="hover:text-gray-600 transition-colors">Terms</a>
+        <a href="#" class="hover:text-gray-600 transition-colors">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  // =====================
+  // State
+  // =====================
+  let activeTab = 'youtube';
+  let selectedFormat = 'mp4-hd';
+  let downloading = false;
+
+  // =====================
+  // FAQ Data
+  // =====================
+  const faqs = [
+    { q: "Is SnapLoad completely free?", a: "Yes, 100% free with no hidden costs, subscriptions, or sign-up requirements." },
+    { q: "What video quality can I download?", a: "YouTube supports up to 4K/1080p HD. Instagram downloads match the original upload quality." },
+    { q: "Is it safe to use?", a: "Absolutely. We don't store URLs, files, or personal data. All downloads are processed in real-time and discarded immediately." },
+    { q: "Can I download Instagram Reels?", a: "Yes! Paste the Reel URL and select your format. Both public and some private posts are supported." },
+    { q: "What browsers are supported?", a: "All modern browsers — Chrome, Firefox, Safari, Edge — on desktop and mobile devices." },
+  ];
+
+  const faqList = document.getElementById('faq-list');
+  faqs.forEach((f, i) => {
+    faqList.innerHTML += `
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <button class="w-full text-left px-5 py-4 flex items-center justify-between gap-3" onclick="toggleFaq(${i})">
+          <span class="font-semibold text-sm text-gray-700">${f.q}</span>
+          <svg id="faq-arrow-${i}" class="w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="faq-body-${i}" class="hidden px-5 pb-4 text-xs text-gray-400 leading-relaxed border-t border-gray-100">${f.a}</div>
+      </div>
+    `;
+  });
+
+  function toggleFaq(i) {
+    const body = document.getElementById(`faq-body-${i}`);
+    const arrow = document.getElementById(`faq-arrow-${i}`);
+    const isOpen = !body.classList.contains('hidden');
+    // close all
+    faqs.forEach((_, j) => {
+      document.getElementById(`faq-body-${j}`).classList.add('hidden');
+      document.getElementById(`faq-arrow-${j}`).style.transform = '';
+    });
+    if (!isOpen) {
+      body.classList.remove('hidden');
+      arrow.style.transform = 'rotate(180deg)';
+    }
+  }
+
+  // =====================
+  // Tab switcher
+  // =====================
+  function setTab(tab) {
+    activeTab = tab;
+    ['youtube', 'instagram'].forEach(t => {
+      const el = document.getElementById(`tab-${t}`);
+      if (t === tab) {
+        el.classList.add('active');
+        el.classList.remove('text-gray-500');
+        el.classList.add('text-gray-700');
+      } else {
+        el.classList.remove('active');
+        el.classList.remove('text-gray-700');
+        el.classList.add('text-gray-500');
+      }
+    });
+    document.getElementById('url-input').placeholder =
+      tab === 'youtube'
+        ? 'Paste YouTube URL here (e.g. https://youtu.be/…)'
+        : 'Paste Instagram URL here (e.g. https://www.instagram.com/reel/…)';
+  }
+
+  // =====================
+  // Format selection
+  // =====================
+  function selectFormat(el, fmt) {
+    selectedFormat = fmt;
+    document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  // =====================
+  // Input handling
+  // =====================
+  function handleInput() {
+    const val = document.getElementById('url-input').value.trim();
+    document.getElementById('clear-btn').classList.toggle('hidden', !val);
+    // Auto-detect platform
+    if (val.includes('youtube.com') || val.includes('youtu.be')) setTab('youtube');
+    else if (val.includes('instagram.com')) setTab('instagram');
+  }
+
+  function clearInput() {
+    document.getElementById('url-input').value = '';
+    document.getElementById('clear-btn').classList.add('hidden');
+    document.getElementById('progress-section').classList.add('hidden');
+  }
+
+  // =====================
+  // Real Download (calls backend)
+  // =====================
+  function handleDownload() {
+    if (downloading) return;
+    const url = document.getElementById('url-input').value.trim();
+    if (!url) {
+      showToast('error', 'Please paste a video URL first!');
+      shakeInput();
+      return;
+    }
+    if (!isValidUrl(url)) {
+      showToast('error', 'Invalid URL. Please paste a YouTube or Instagram link.');
+      shakeInput();
+      return;
+    }
+    startDownload(url);
+  }
+
+  function isValidUrl(url) {
+    return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('instagram.com');
+  }
+
+  function shakeInput() {
+    const inp = document.getElementById('url-input');
+    inp.style.borderColor = '#FF6B6B';
+    setTimeout(() => { inp.style.borderColor = ''; }, 1500);
+  }
+
+  async function startDownload(videoUrl) {
+    downloading = true;
+    const btn = document.getElementById('download-btn');
+    btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"/><path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8v8z"/></svg> Processing…`;
+    btn.style.opacity = '0.8';
+
+    const prog = document.getElementById('progress-section');
+    prog.classList.remove('hidden');
+    resetProgress();
+
+    // Map UI selection → mode param
+    const mode = selectedFormat === 'mp4-hd' ? 'hd'
+               : selectedFormat === 'mp4-sd' ? 'sd'
+               : 'mp3';
+
+    // Animate UI while waiting
+    animateProgress(0, 30, 1000, 'Sending to server…', 'Connecting to yt-dlp', '', () => {
+      animateProgress(30, 60, 1200, 'Processing video…', `Format: ${formatLabel(selectedFormat)}`, '', null);
+    });
+
+    try {
+      const params = new URLSearchParams({ url: videoUrl, mode });
+
+      // Use SSE to stream progress from server
+      const evtSource = new EventSource(`/down?${params}`);
+
+      evtSource.addEventListener('progress', e => {
+        const d = JSON.parse(e.data);
+        if (d.percent !== undefined) setProgress(Math.min(Math.round(d.percent), 99));
+        if (d.title) document.getElementById('prog-title').textContent = d.title;
+        if (d.status) document.getElementById('prog-sub').textContent = d.status;
+      });
+
+      evtSource.addEventListener('done', e => {
+        evtSource.close();
+        const d = JSON.parse(e.data);
+
+        setProgress(100);
+        document.getElementById('prog-title').textContent = d.filename || 'File Ready!';
+        document.getElementById('prog-sub').textContent = 'Your download will start automatically…';
+        document.getElementById('prog-status').textContent = '✓ Done';
+        document.getElementById('prog-status').className = 'text-xs font-bold text-emerald-500';
+        document.getElementById('prog-bar').style.background = 'linear-gradient(90deg, #4ECDC4, #22C55E)';
+
+        // ✅ Trigger real browser file download
+        if (d.downloadUrl) {
+          const a = document.createElement('a');
+          a.href = d.downloadUrl;
+          a.download = d.filename || 'video';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+
+        showToast('success', `Saving to your device… 🎉`);
+        btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Saved to Device!`;
+        btn.style.background = 'linear-gradient(135deg, #4ECDC4, #22C55E)';
+        btn.style.animation = 'none';
+        btn.style.opacity = '1';
+
+        // Show a "Save file" fallback link in the progress box
+        document.getElementById('prog-sub').innerHTML =
+          `Auto-saving… <a href="${d.downloadUrl}" download="${d.filename}"
+            style="color:#4ECDC4;font-weight:700;text-decoration:underline;">
+            Click here if it didn't start
+          </a>`;
+
+        setTimeout(resetBtn, 5000);
+      });
+
+      evtSource.addEventListener('error-msg', e => {
+        evtSource.close();
+        const d = JSON.parse(e.data);
+        showToast('error', '❌ ' + (d.message || 'Download failed. Check the URL and try again.'));
+        document.getElementById('prog-title').textContent = 'Download failed';
+        document.getElementById('prog-sub').textContent = d.message || 'Unknown error';
+        document.getElementById('prog-bar').style.background = '#FF6B6B';
+        resetBtn();
+      });
+
+      evtSource.onerror = () => {
+        evtSource.close();
+        showToast('error', 'Connection error. Is the server running?');
+        resetBtn();
+      };
+
+    } catch(err) {
+      showToast('error', 'Failed: ' + err.message);
+      resetBtn();
+    }
+  }
+
+  function resetBtn() {
+    const btn = document.getElementById('download-btn');
+    btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download Now`;
+    btn.style.background = '';
+    btn.style.animation = '';
+    btn.style.opacity = '1';
+    downloading = false;
+  }
+
+  function formatLabel(fmt) {
+    return { 'mp4-hd': 'MP4 HD (1080p)', 'mp4-sd': 'MP4 SD (720p)', 'mp3': 'MP3 Audio' }[fmt] || fmt;
+  }
+
+  function resetProgress() {
+    setProgress(0);
+    document.getElementById('prog-title').textContent = 'Fetching video info…';
+    document.getElementById('prog-sub').textContent = 'Please wait';
+    document.getElementById('prog-status').textContent = '';
+    document.getElementById('prog-bar').style.background = 'linear-gradient(90deg, #4ECDC4, #38BDF8)';
+  }
+
+  function setProgress(p) {
+    document.getElementById('prog-bar').style.width = p + '%';
+    document.getElementById('prog-percent').textContent = p + '%';
+  }
+
+  function animateProgress(from, to, duration, title, sub, status, cb) {
+    document.getElementById('prog-title').textContent = title;
+    document.getElementById('prog-sub').textContent = sub;
+    if (status) {
+      document.getElementById('prog-status').textContent = status;
+    }
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min((now - start) / duration, 1);
+      const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+      const current = Math.round(from + (to - from) * ease);
+      setProgress(current);
+      if (t < 1) requestAnimationFrame(step);
+      else if (cb) cb();
+    }
+    requestAnimationFrame(step);
+  }
+
+  // =====================
+  // Toast
+  // =====================
+  function showToast(type, msg) {
+    const toast = document.getElementById('toast');
+    const icon = document.getElementById('toast-icon');
+    const msgEl = document.getElementById('toast-msg');
+
+    icon.style.background = type === 'success' ? '#22C55E' : '#FF6B6B';
+    icon.textContent = type === 'success' ? '✓' : '!';
+    msgEl.textContent = msg;
+
+    toast.style.transform = 'translateX(0)';
+    toast.style.opacity = '1';
+    setTimeout(() => {
+      toast.style.transform = 'translateX(200%)';
+      toast.style.opacity = '0';
+    }, 4000);
+  }
+
+  // =====================
+  // Paste from clipboard shortcut
+  // =====================
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+      const inp = document.getElementById('url-input');
+      if (document.activeElement !== inp) inp.focus();
+    }
+  });
+
+  // Detect paste globally
+  document.addEventListener('paste', e => {
+    const inp = document.getElementById('url-input');
+    if (document.activeElement !== inp) {
+      const text = (e.clipboardData || window.clipboardData).getData('text');
+      if (text && (text.includes('youtube') || text.includes('instagram') || text.includes('youtu.be'))) {
+        inp.value = text;
+        handleInput();
+        showToast('success', 'URL pasted! Choose format and download.');
+      }
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+const ytdl = require('@distube/ytdl-core');
+const { spawn } = require('child_process');
+const path = require('path');
+
+const url = 'https://www.youtube.com/watch?v=qdF0VUyV6U0&t=4s';
+const output = 'downloaded_video.mp4';
+
+async function downloadVideo(videoUrl) {
+    console.log('Fetching video info...');
+
+    const info = await ytdl.getInfo(videoUrl);
+    console.log('Title:', info.videoDetails.title);
+
+    // 1. Setup the streams AFTER confirming info is fetched
+    const videoStream = ytdl.downloadFromInfo(info, { quality: 'highestvideo' });
+    const audioStream = ytdl.downloadFromInfo(info, { quality: 'highestaudio' });
+
+    // 2. Spawn FFmpeg manually using pipe:3 and pipe:4
+    const ffmpegProcess = spawn('ffmpeg', [
+        '-i', 'pipe:3',
+        '-i', 'pipe:4',
+        '-map', '0:v:0',
+        '-map', '1:a:0',
+        '-c:v', 'copy',
+        '-c:a', 'aac',
+        '-y',
+        output
+    ], {
+        windowsHide: true,
+        stdio: [
+            'inherit',  // stdin
+            'inherit',  // stdout
+            'inherit',  // stderr
+            'pipe',     // pipe:3 → video
+            'pipe'      // pipe:4 → audio
+        ]
+    });
+
+    // 3. Pipe streams into FFmpeg
+    videoStream.pipe(ffmpegProcess.stdio[3]);
+    audioStream.pipe(ffmpegProcess.stdio[4]);
+
+    console.log('Starting download and muxing...');
+
+    ffmpegProcess.on('close', (code) => {
+        if (code === 0) {
+            console.log('\n✅ Success! Video saved to:', path.resolve(output));
+        } else {
+            console.error(`\n❌ FFmpeg exited with code ${code}`);
+        }
+    });
+
+    videoStream.on('error', err => console.error('Video stream error:', err.message));
+    audioStream.on('error', err => console.error('Audio stream error:', err.message));
+    ffmpegProcess.on('error', err => console.error('FFmpeg error:', err.message));
+}
+
+downloadVideo(url);
